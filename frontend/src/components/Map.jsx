@@ -343,8 +343,8 @@ const Map = () => {
 
       {/* ── CATEGORY TOGGLE BAR (bottom-left) ───────────────────────────────── */}
       <div style={{
-        position: "absolute", bottom: routeInfo ? 80 : 24, left: 16, zIndex: 1000,
-        display: "flex", gap: 8, flexWrap: "wrap",
+        position: "absolute", bottom: 24, left: 16, zIndex: 9999,
+        display: "flex", gap: 8, flexWrap: "wrap", pointerEvents: "all",
       }}>
         {[
           { key: "hospital", emoji: "🏥", label: "Hospitals", color: "#e63946" },
@@ -380,11 +380,11 @@ const Map = () => {
       {/* ── ROUTE INFO BANNER ────────────────────────────────────────────────── */}
       {routeInfo && (
         <div style={{
-          position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
-          zIndex: 1000, background: "#fff", borderRadius: 12,
+          position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)",
+          zIndex: 9999, background: "#fff", borderRadius: 12,
           boxShadow: "0 4px 16px rgba(0,0,0,0.2)", padding: "10px 18px",
           display: "flex", alignItems: "center", gap: 16, fontSize: 13,
-          maxWidth: "90vw",
+          maxWidth: "90vw", whiteSpace: "nowrap",
         }}>
           <div>
             <p style={{ fontWeight: 700, margin: 0 }}>🗺️ Route to {routeInfo.to}</p>
@@ -402,8 +402,8 @@ const Map = () => {
       {/* ── ROUTE ERROR ──────────────────────────────────────────────────────── */}
       {routeError && (
         <div style={{
-          position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
-          zIndex: 1000, background: "#fee2e2", border: "1px solid #f87171",
+          position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)",
+          zIndex: 9999, background: "#fee2e2", border: "1px solid #f87171",
           color: "#b91c1c", borderRadius: 12, padding: "10px 18px",
           display: "flex", alignItems: "center", gap: 12, fontSize: 13,
           maxWidth: "90vw",
@@ -415,7 +415,7 @@ const Map = () => {
 
       {/* ── SIDEBAR ──────────────────────────────────────────────────────────── */}
       <div style={{
-        position: "absolute", top: 16, right: 16, zIndex: 1000,
+        position: "absolute", top: 16, right: 16, zIndex: 9999,
         background: "#fff", borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
         width: 280, maxHeight: "78vh", display: "flex", flexDirection: "column",
         overflow: "hidden",

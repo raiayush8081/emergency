@@ -55,7 +55,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="w-full md:w-1/2 mb-10 md:mb-0">
-          <img src="file:///C:/Users/AYUSH%20RAI/.gemini/antigravity-ide/brain/200266fd-99e2-4950-934f-260e966b03ca/hero_emergency_map_1788156178340.jpg" alt="Hero illustration" className="rounded-xl glass" />
+          <img src="/hero.jpg" alt="Hero illustration" className="rounded-xl glass" />
         </div>
       </section>
 
