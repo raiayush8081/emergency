@@ -1,10 +1,5 @@
-import Map from './components/Map.jsx'
- const App = () => {
-   return (
-     <>
-     <Map/>
-     </>
-   )
- }
- 
- export default App
+import AppRoutes from "./routes.jsx";
+
+const App = () => <AppRoutes />;
+
+export default App;
