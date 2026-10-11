@@ -89,6 +89,18 @@ const FlyToMarker = ({ target }) => {
   return null;
 };
 
+// ─── FlyToUser: flies map back to the user's own GPS position ────────────────
+const FlyToUser = ({ trigger, position, onDone }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (trigger && position) {
+      map.flyTo(position, 16, { duration: 1.2 });
+      onDone();
+    }
+  }, [trigger, position, map, onDone]);
+  return null;
+};
+
 // ─── Popup content ────────────────────────────────────────────────────────────
 const PlacePopup = ({ place, onGetDirections, routeLoading, label }) => (
   <div style={{ minWidth: 200, fontSize: 13 }}>
@@ -172,8 +184,11 @@ const Map = () => {
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
 
-  // FlyTo target
+  // FlyTo target (place)
   const [flyTarget, setFlyTarget] = useState(null);
+
+  // FlyTo user's own location
+  const [flyToUserTrigger, setFlyToUserTrigger] = useState(false);
 
   const positionRef = useRef(null);
   const fetchedRef = useRef(false);
@@ -256,6 +271,11 @@ const Map = () => {
 
   const clearRoute = () => { setRoute(null); setRouteInfo(null); setRouteError(null); };
 
+  const flyToMyLocation = () => {
+    clearRoute();
+    setFlyToUserTrigger(true);
+  };
+
   const toggleVisible = (key) => setVisible((prev) => ({ ...prev, [key]: !prev[key] }));
 
   // ── Sidebar data for active tab ──────────────────────────────────────────────
@@ -337,8 +357,15 @@ const Map = () => {
         {/* Route */}
         <RouteController route={route} />
 
-        {/* Fly to selected */}
+        {/* Fly to selected place */}
         {flyTarget && <FlyToMarker target={flyTarget} />}
+
+        {/* Fly to user's own location */}
+        <FlyToUser
+          trigger={flyToUserTrigger}
+          position={position}
+          onDone={() => setFlyToUserTrigger(false)}
+        />
       </MapContainer>
 
       {/* ── CATEGORY TOGGLE BAR (bottom-left) ───────────────────────────────── */}
@@ -366,11 +393,12 @@ const Map = () => {
           </button>
         ))}
         <button
-          onClick={() => { clearRoute(); }}
+          onClick={flyToMyLocation}
           style={{
-            background: "#444", color: "#fff", border: "none", borderRadius: 20,
+            background: "#e63946", color: "#fff", border: "none", borderRadius: 20,
             padding: "6px 14px", fontWeight: 600, fontSize: 12,
             cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            transition: "background 0.2s",
           }}
         >
           📍 My Location
