@@ -295,10 +295,10 @@ const Map = () => {
   }
 
   return (
-    <div className="relative h-screen">
+    <div className="relative h-full">
 
       {/* ── MAP ─────────────────────────────────────────────────────────────── */}
-      <MapContainer center={position} zoom={13} style={{ height: "100vh", width: "100%" }}>
+      <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
