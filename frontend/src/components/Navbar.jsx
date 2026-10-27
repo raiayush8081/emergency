@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
+  const handleOpenEmergencyCall = () => {
+    window.dispatchEvent(new CustomEvent("open-emergency-call"));
+  };
+
   return (
-    <div className="flex flex-row items-center justify-between p-2 border-b-2 border-gray-300 bg-amber-100">
+    <header className="flex flex-row items-center justify-between px-3 md:px-6 py-2 border-b-2 border-gray-300 bg-amber-50 shadow-xs z-30">
       {/* Logo — clicking redirects to homepage */}
       <Link
         to="/"
@@ -13,10 +17,11 @@ const Navbar = () => {
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 48 48"
-          width="36"
-          height="36"
+          width="34"
+          height="34"
           fill="none"
           aria-hidden="true"
+          className="transition-transform group-hover:scale-105"
         >
           {/* Shield background */}
           <path
@@ -31,16 +36,32 @@ const Navbar = () => {
         </svg>
 
         {/* Site name */}
-        <span className="text-2xl font-bold text-gray-800 group-hover:text-red-600 transition-colors duration-200">
+        <span className="text-lg md:text-xl font-extrabold text-gray-900 group-hover:text-red-600 transition-colors duration-200">
           Emergency Service Finder
         </span>
       </Link>
 
-      {/* Right side: site tagline or empty */}
-      <span className="text-sm text-gray-500 hidden md:block">
-        Find help near you, instantly.
-      </span>
-    </div>
+      {/* Right side: Emergency Call Button & Quick Navigation */}
+      <div className="flex items-center gap-2 md:gap-4">
+        <Link
+          to="/app"
+          className="text-xs md:text-sm font-semibold text-gray-700 hover:text-red-600 px-2 py-1 transition hidden sm:inline-block"
+        >
+          🗺️ Map
+        </Link>
+
+        {/* Prominent Emergency Calling button */}
+        <button
+          onClick={handleOpenEmergencyCall}
+          className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-1.5 px-3 md:px-4 rounded-full text-xs md:text-sm flex items-center gap-1.5 shadow-md hover:shadow-lg transition-all transform hover:scale-105 cursor-pointer"
+          title="Emergency Call 112 / 108"
+          aria-label="Open emergency call dialog"
+        >
+          <span className="text-sm md:text-base animate-pulse">🚨</span>
+          <span>Emergency Call</span>
+        </button>
+      </div>
+    </header>
   );
 };
 

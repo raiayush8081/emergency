@@ -11,20 +11,22 @@ const LandingPage = () => {
     <div className="min-h-screen bg-gray-900 text-white font-sans">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-        <div className="text-2xl font-bold">Emergency Service Provider</div>
-        <button
-          onClick={handleFind}
-          className="ml-4 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-full transition"
-        >
-          Open Emergency App
-        </button>
-        {/* Hamburger for mobile */}
-        <div className="md:hidden">
-          {/* Simple placeholder for future hamburger menu */}
-          <button className="text-gray-300 focus:outline-none">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+        <div className="text-2xl font-bold flex items-center gap-2">
+          <span>🚨</span> Emergency Service Provider
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("open-emergency-call"))}
+            className="bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-2 px-4 rounded-full text-sm shadow-md transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🚨</span>
+            <span>Emergency Call</span>
+          </button>
+          <button
+            onClick={handleFind}
+            className="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-medium py-2 px-4 rounded-full text-sm transition"
+          >
+            Open Map
           </button>
         </div>
       </nav>
@@ -42,16 +44,16 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleFind}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full transition"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full transition flex items-center justify-center gap-2"
             >
-              🚨 Find Emergency Services
+              🗺️ Find Services on Map
             </button>
-            <Link
-              to="#services"
-              className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-full transition"
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-emergency-call"))}
+              className="bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-6 rounded-full transition flex items-center justify-center gap-2 shadow-lg"
             >
-              Explore Services
-            </Link>
+              🚨 Emergency Call (112)
+            </button>
           </div>
         </div>
         <div className="w-full md:w-1/2 mb-10 md:mb-0">

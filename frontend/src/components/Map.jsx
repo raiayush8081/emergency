@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import LocationMarker from "./LocationMarker.jsx";
 
@@ -102,28 +103,42 @@ const FlyToUser = ({ trigger, position, onDone }) => {
 };
 
 // ─── Popup content ────────────────────────────────────────────────────────────
-const PlacePopup = ({ place, onGetDirections, routeLoading, label }) => (
+const PlacePopup = ({ place, onGetDirections, routeLoading, label, onViewDetails }) => (
   <div style={{ minWidth: 200, fontSize: 13 }}>
     <p style={{ fontWeight: 700, marginBottom: 4 }}>{place.name}</p>
     {place.address && (
       <p style={{ color: "#555", marginBottom: 8, fontSize: 11 }}>{place.address}</p>
     )}
-    <button
-      onClick={() => onGetDirections(place)}
-      disabled={routeLoading}
-      style={{
-        background: "#e63946", color: "#fff", border: "none",
-        borderRadius: 6, padding: "6px 14px", cursor: routeLoading ? "not-allowed" : "pointer",
-        fontWeight: 600, width: "100%", opacity: routeLoading ? 0.7 : 1,
-      }}
-    >
-      {routeLoading ? "Loading route…" : `🗺️ Get Directions`}
-    </button>
+    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+      <button
+        onClick={() => onGetDirections(place)}
+        disabled={routeLoading}
+        style={{
+          flex: 1, background: "#e63946", color: "#fff", border: "none",
+          borderRadius: 6, padding: "6px 10px", cursor: routeLoading ? "not-allowed" : "pointer",
+          fontWeight: 600, opacity: routeLoading ? 0.7 : 1, fontSize: 11,
+        }}
+      >
+        {routeLoading ? "Loading…" : `🗺️ Directions`}
+      </button>
+      {onViewDetails && (
+        <button
+          onClick={() => onViewDetails(place)}
+          style={{
+            flex: 1, background: "#2a9d8f", color: "#fff", border: "none",
+            borderRadius: 6, padding: "6px 10px", cursor: "pointer",
+            fontWeight: 600, fontSize: 11,
+          }}
+        >
+          📋 Details
+        </button>
+      )}
+    </div>
   </div>
 );
 
 // ─── Sidebar Card ─────────────────────────────────────────────────────────────
-const PlaceCard = ({ place, onGetDirections, onViewOnMap, routeLoading, accentColor }) => (
+const PlaceCard = ({ place, onGetDirections, onViewOnMap, routeLoading, accentColor, viewDetails }) => (
   <div style={{
     borderBottom: "1px solid #eee", padding: "10px 4px",
     display: "flex", flexDirection: "column", gap: 4,
@@ -154,12 +169,25 @@ const PlaceCard = ({ place, onGetDirections, onViewOnMap, routeLoading, accentCo
       >
         🗺️ Directions
       </button>
+      {viewDetails && (
+        <button
+          onClick={viewDetails}
+          style={{
+            flex: 1, background: "#4caf50", color: "#fff", border: "none",
+            borderRadius: 5, padding: "4px 0", fontSize: 11,
+            cursor: "pointer", fontWeight: 600,
+          }}
+        >
+          📋 View Details
+        </button>
+      )}
     </div>
   </div>
 );
 
 // ─── Main Map Component ───────────────────────────────────────────────────────
 const Map = () => {
+  const navigate = useNavigate();
   const [position, setPosition] = useState(null);
   const [locationError, setLocationError] = useState(null);
 
@@ -205,10 +233,27 @@ const Map = () => {
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const parsed = parseFeatures(data.features);
-      if (key === "hospital") setHospitals(parsed);
-      if (key === "police") setPolice(parsed);
-      if (key === "pharmacy") setPharmacies(parsed);
+      if (key === "hospital") {
+        const enriched = (data.features || []).map((f) => {
+          const props = f.properties || {};
+          return {
+            id: props.place_id || props.id || `${props.name}-${f.geometry?.coordinates?.join('-')}`,
+            name: props.name,
+            address: props.formatted || props.address_line1 || props.street || null,
+            lat: f.geometry.coordinates[1],
+            lng: f.geometry.coordinates[0],
+            phone: props.phone || null,
+            website: props.website || props.url || null,
+            opening_hours: props.opening_hours || props.hours || null,
+            booking_url: props.booking_url || null,
+          };
+        }).filter((h) => isValidName(h.name));
+        setHospitals(enriched);
+      } else if (key === "police") {
+        setPolice(parseFeatures(data.features));
+      } else if (key === "pharmacy") {
+        setPharmacies(parseFeatures(data.features));
+      }
     } catch (err) {
       console.error(`Failed to fetch ${key}:`, err);
       setFetchError((prev) => ({ ...prev, [key]: `Unable to fetch ${key === "pharmacy" ? "pharmacies" : key + " stations"}.` }));
@@ -271,6 +316,24 @@ const Map = () => {
 
   const clearRoute = () => { setRoute(null); setRouteInfo(null); setRouteError(null); };
 
+  // Check for direction target from HospitalDetails page
+  useEffect(() => {
+    if (!position) return;
+    const targetStr = sessionStorage.getItem("directionTarget");
+    if (targetStr) {
+      try {
+        const target = JSON.parse(targetStr);
+        sessionStorage.removeItem("directionTarget");
+        if (target && target.lat && target.lng) {
+          getDirections(target);
+          setFlyTarget({ ...target, _t: Date.now() });
+        }
+      } catch (e) {
+        console.error("Error reading directionTarget from sessionStorage:", e);
+      }
+    }
+  }, [position, getDirections]);
+
   const flyToMyLocation = () => {
     clearRoute();
     setFlyToUserTrigger(true);
@@ -291,7 +354,7 @@ const Map = () => {
   // ─── Location denied ────────────────────────────────────────────────────────
   if (locationError) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white gap-4 px-6 text-center">
+      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111827", color: "#fff", gap: 16, padding: "0 24px", textAlign: "center" }}>
         <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -300,6 +363,12 @@ const Map = () => {
         </svg>
         <h2 className="text-2xl font-bold">Location Access Required</h2>
         <p className="max-w-sm text-gray-300">{locationError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{ background: "#e63946", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontWeight: 600, cursor: "pointer", marginTop: 8 }}
+        >
+          🔄 Retry
+        </button>
       </div>
     );
   }
@@ -307,9 +376,10 @@ const Map = () => {
   // ─── Getting location loading screen ────────────────────────────────────────
   if (!position) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white gap-3">
+      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111827", color: "#fff", gap: 12 }}>
         <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-lg">Getting your location…</p>
+        <p className="text-lg font-semibold">Detecting your location…</p>
+        <p className="text-xs text-gray-400">Please grant GPS permission in your browser prompt.</p>
       </div>
     );
   }
@@ -331,7 +401,16 @@ const Map = () => {
         {visible.hospital && hospitals.map((h, i) => (
           <Marker key={`h-${i}`} position={[h.lat, h.lng]} icon={icons.hospital}>
             <Popup minWidth={220}>
-              <PlacePopup place={h} onGetDirections={getDirections} routeLoading={routeLoading} label="Hospital" />
+              <PlacePopup
+                place={h}
+                onGetDirections={getDirections}
+                routeLoading={routeLoading}
+                label="Hospital"
+                onViewDetails={(p) => {
+                  sessionStorage.setItem('selectedHospital', JSON.stringify(p));
+                  navigate(`/hospital/${p.id}`);
+                }}
+              />
             </Popup>
           </Marker>
         ))}
@@ -504,6 +583,12 @@ const Map = () => {
               onViewOnMap={(p) => setFlyTarget({ ...p, _t: Date.now() })}
               routeLoading={routeLoading}
               accentColor={tabColors[activeTab]}
+              // Only for hospitals we add a View Details button
+              viewDetails={activeTab === "hospital" ? () => {
+                // Store selected hospital for refresh fallback
+                sessionStorage.setItem('selectedHospital', JSON.stringify(place));
+                navigate(`/hospital/${place.id}`);
+              } : undefined}
             />
           ))}
         </div>
